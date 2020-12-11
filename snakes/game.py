@@ -6,7 +6,7 @@ class Game:
 
     def __init__(self, win):
         self.win = win
-        self.snake = Snake()
+        self.snake = Snake(win)
 
     def _draw_window(self):
         # draw the background
@@ -16,5 +16,6 @@ class Game:
         self.snake.update()
     
     def update(self):
+        """Draw background, snake and fruit then update pygame window."""
         self._draw_window()
         pygame.display.update()

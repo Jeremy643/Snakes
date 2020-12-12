@@ -16,11 +16,9 @@ def main():
     clock = pygame.time.Clock()
     game = Game(WIN)
 
-    # TODO: Figure out pygame.set_allowed()
-
     # limit the pygame events allowed in the queue
-    # pygame.event.set_allowed(pygame.KEYDOWN)
-    # print(pygame.event.get_blocked(pygame.MOUSEBUTTONDOWN))
+    pygame.event.set_blocked(None)  # block all events
+    pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN])  # unblock these events
 
     clock_tick = clock.tick
     while run:
@@ -39,9 +37,6 @@ def main():
                     game.user_input(DOWN)
                 elif event.key == pygame.K_LEFT:
                     game.user_input(LEFT)
-
-            # if event.type == pygame.MOUSEBUTTONDOWN:
-            #     print('wrong')
         
         game.update()
     

@@ -25,11 +25,15 @@ class Snake:
     
     def move(self):
         """Increase the position of each body segment with respect to the direction."""
-        pass
+        x_vel, y_vel = tuple(map(lambda d: d * self.speed, self.direction))
+        for i in range(len(self.body)):
+            x_body, y_body = self.body[i]
+            self.body[i] = (x_vel + x_body, y_vel + y_body)
 
     def change_direction(self, snake_dir):
         """Change the direction of the snake based on the user's input."""
         self.direction = snake_dir
 
     def update(self):
+        self.move()
         self._draw_snake()

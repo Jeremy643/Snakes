@@ -6,7 +6,7 @@ WIDTH, HEIGHT = 800, 800
 
 # snake
 BODY_WIDTH, BODY_HEIGHT = 25, 25
-START_SPEED = 5
+START_SPEED = 1
 
 # (right/left, up/down)
 UP = (0, -1)

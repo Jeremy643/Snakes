@@ -16,8 +16,8 @@ class Fruit:
     
     def _pick_position(self):
         """Pick a random location for the fruit."""
-        x = randint(0, WIDTH)
-        y = randint(0, HEIGHT)
+        x = randint(0, WIDTH-15)
+        y = randint(0, HEIGHT-15)
         return (x, y)
     
     def _draw_fruit(self):

@@ -1,28 +1,29 @@
 import pygame
 from .constants import *
-from collections import deque
+from collections import deque, namedtuple
 
 class Snake:
 
     def __init__(self, win):
         self.win = win
 
-        self.start_pos = (WIDTH//2, HEIGHT//2)
-        self.body = deque([self.start_pos])
-        self.path = deque()
-
         self.speed = START_SPEED
         self.direction = RIGHT
         self.alive = True
+
+        self.start_pos = (WIDTH//2, HEIGHT//2)
+        self.snake = deque([self.start_pos])
+        self.turns = deque()
+        self.path = deque()
     
     def __str__(self):
-        return f'SNAKE: length = {len(self.body)} | speed = {self.speed} | direction = {self.direction}'
+        return f'SNAKE: length = {len(self.snake)} | speed = {self.speed} | direction = {self.direction}'
     
     def __repr__(self):
         return f'{__class__.__name__}({repr(self.win)})'
     
     def _draw_snake(self):
-        for seg in self.body:
+        for seg in self.snake:
             x, y = seg
             pygame.draw.rect(self.win, BROWN, (x, y, BODY_WIDTH, BODY_HEIGHT))
     
@@ -32,27 +33,28 @@ class Snake:
             self.path.pop()
     
     def get_head(self):
-        return self.body[0]
+        return self.snake[0]
     
     def grow(self):
-        x_last, y_last = self.body[-1]
+        """When the snake eats fruit this method is called to increase the length of the snake."""
+        x_last, y_last = self.snake[-1]
 
         if self.direction == RIGHT or self.direction == LEFT:
-            pos = (x_last - (self.direction[0] * len(self.body) * BODY_WIDTH), y_last)
+            pos = (x_last - (self.direction[0] * len(self.snake) * BODY_WIDTH), y_last)
         else:
-            pos = (x_last, y_last - (self.direction[1] * len(self.body) * BODY_HEIGHT))
+            pos = (x_last, y_last - (self.direction[1] * len(self.snake) * BODY_HEIGHT))
         
-        self.body.append(pos)
+        self.snake.append(pos)
 
     def move(self):
         """Increase the position of each body segment with respect to the direction."""
         self._update_path()
 
         x_vel, y_vel = tuple(map(lambda d: d * self.speed, self.direction))
-        x_head, y_head = self.body[0]
+        x_head, y_head = self.snake[0]
         self.body[0] = (x_vel + x_head, y_vel + y_head)
 
-        for i in range(1, len(self.body)):
+        for i in range(1, len(self.snake)):
             path_index = i - 1
 
             x_path, y_path = self.path[path_index]
@@ -62,10 +64,6 @@ class Snake:
                 self.body[i] = (x_path, y_path - (self.direction[1] * i * BODY_HEIGHT))
 
             path_index += 1
-
-        # for i in range(len(self.body)):
-        #     x_body, y_body = self.body[i]
-        #     self.body[i] = (x_vel + x_body, y_vel + y_body)
 
     def change_direction(self, snake_dir):
         """Change the direction of the snake based on the user's input."""
@@ -79,7 +77,7 @@ class Snake:
     
     def touching_boundary(self):
         """Check if the snake is touching any of the boundaries."""
-        x_pos, y_pos = self.body[0]  # snake head always at index 0
+        x_pos, y_pos = self.snake[0]  # snake head always at index 0
 
         if y_pos == 0 or x_pos == (WIDTH - BODY_WIDTH) or y_pos == (HEIGHT - BODY_HEIGHT) or x_pos == 0:
             return True

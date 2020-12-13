@@ -16,13 +16,17 @@ class Fruit:
     
     def _pick_position(self):
         """Pick a random location for the fruit."""
-        x = randint(0, WIDTH-15)
-        y = randint(0, HEIGHT-15)
+        x = randint(0, WIDTH - FRUIT_WIDTH)
+        y = randint(0, HEIGHT - FRUIT_HEIGHT)
         return (x, y)
     
     def _draw_fruit(self):
         # TODO: Replace rectange with sprite. 
-        pygame.draw.rect(self.win, YELLOW, (*self.position, 15, 15))
+        pygame.draw.rect(self.win, YELLOW, (*self.position, FRUIT_WIDTH, FRUIT_HEIGHT))
+    
+    def eat(self):
+        # change the position of the fruit
+        self.position = self._pick_position()
     
     def update(self):
         self._draw_fruit()

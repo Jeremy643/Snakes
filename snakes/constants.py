@@ -8,6 +8,9 @@ WIDTH, HEIGHT = 800, 800
 BODY_WIDTH, BODY_HEIGHT = 25, 25
 START_SPEED = 1
 
+# fruit
+FRUIT_WIDTH, FRUIT_HEIGHT = 15, 15
+
 # (right/left, up/down)
 UP = (0, -1)
 RIGHT = (1, 0)

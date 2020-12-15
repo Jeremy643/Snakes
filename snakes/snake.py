@@ -1,5 +1,6 @@
 import pygame
 from .constants import *
+from .turn import Turn
 from collections import deque, namedtuple
 
 class Snake:
@@ -12,9 +13,9 @@ class Snake:
         self.alive = True
 
         self.start_pos = (WIDTH//2, HEIGHT//2)
-        self.snake = deque([self.start_pos])
+        self.body = namedtuple('body', ['position', 'direction'])
+        self.snake = deque([self.body(self.start_pos, self.direction)])
         self.turns = deque()
-        self.path = deque()
     
     def __str__(self):
         return f'SNAKE: length = {len(self.snake)} | speed = {self.speed} | direction = {self.direction}'
@@ -24,46 +25,65 @@ class Snake:
     
     def _draw_snake(self):
         for seg in self.snake:
-            x, y = seg
+            x, y = seg.position
             pygame.draw.rect(self.win, BROWN, (x, y, BODY_WIDTH, BODY_HEIGHT))
     
-    def _update_path(self):
-        self.path.appendleft(self.body[0])
-        while len(self.path) > len(self.body) - 1:
-            self.path.pop()
+    def _get_next_turn(self, body_id):
+        for turn in self.turns:
+            if body_id in turn.body_id:
+                return turn
+        return None
+    
+    def _remove_turns(self):
+        """Remove the turns that all parts of the snake have been through."""
+        try:
+            if not self.turns[0].body_id:
+                return self.turns.popleft()
+        except IndexError:
+            return None
+        
+    def _new_body_turns(self):
+        for turn in self.turns:
+            turn.add_body_id(len(self.snake)-1)
+    
+    def _make_turn(self, turn, i):
+        new_pos = turn.position
+        direction = turn.new_direction
+        turn.remove(i)
+        return new_pos, direction
     
     def get_head(self):
-        return self.snake[0]
+        return self.snake[0].position
     
     def grow(self):
         """When the snake eats fruit this method is called to increase the length of the snake."""
-        x_last, y_last = self.snake[-1]
+        x_last, y_last = self.snake[-1].position
 
-        if self.direction == RIGHT or self.direction == LEFT:
-            pos = (x_last - (self.direction[0] * len(self.snake) * BODY_WIDTH), y_last)
+        if self.snake[-1].direction == RIGHT or self.snake[-1].direction == LEFT:
+            pos = (x_last - (self.snake[-1].direction[0] * BODY_WIDTH), y_last)
         else:
-            pos = (x_last, y_last - (self.direction[1] * len(self.snake) * BODY_HEIGHT))
+            pos = (x_last, y_last - (self.snake[-1].direction[1] * BODY_HEIGHT))
         
-        self.snake.append(pos)
+        new_body = self.body(pos, self.snake[-1].direction)
+        self.snake.append(new_body)
+        self._new_body_turns()
 
     def move(self):
         """Increase the position of each body segment with respect to the direction."""
-        self._update_path()
+        for i in range(len(self.snake)):
+            x_vel, y_vel = tuple(map(lambda d: d * self.speed, self.snake[i].direction))
+            x_body, y_body = self.snake[i].position
+            new_pos = (x_vel + x_body, y_vel + y_body)
+            direction = self.snake[i].direction
 
-        x_vel, y_vel = tuple(map(lambda d: d * self.speed, self.direction))
-        x_head, y_head = self.snake[0]
-        self.body[0] = (x_vel + x_head, y_vel + y_head)
+            if i > 0:
+                next_turn = self._get_next_turn(i)
+                x_min, x_max = min(x_body, new_pos[0]), max(x_body, new_pos[0])
+                y_min, y_max = min(y_body, new_pos[1]), max(y_body, new_pos[1])
+                if next_turn and (next_turn.position[0] in range(x_min, x_max + 1) and next_turn.position[1] in range(y_min, y_max + 1)):
+                    new_pos, direction = self._make_turn(next_turn, i)
 
-        for i in range(1, len(self.snake)):
-            path_index = i - 1
-
-            x_path, y_path = self.path[path_index]
-            if self.direction == RIGHT or self.direction == LEFT:
-                self.body[i] = (x_path - (self.direction[0] * i * BODY_WIDTH), y_path)
-            else:
-                self.body[i] = (x_path, y_path - (self.direction[1] * i * BODY_HEIGHT))
-
-            path_index += 1
+            self.snake[i] = self.body(new_pos, direction)
 
     def change_direction(self, snake_dir):
         """Change the direction of the snake based on the user's input."""
@@ -72,14 +92,19 @@ class Snake:
         if self.direction == UP and snake_dir == DOWN or self.direction == DOWN and snake_dir == UP:
             return False
 
+        # add new turn
+        new_turn = Turn(self.snake[0].position, snake_dir, list(range(1, len(self.snake))))
+        self.turns.append(new_turn)
+        
         self.direction = snake_dir
+        self.snake[0] = self.body(self.snake[0].position, snake_dir)
         return True
     
     def touching_boundary(self):
         """Check if the snake is touching any of the boundaries."""
-        x_pos, y_pos = self.snake[0]  # snake head always at index 0
+        x_pos, y_pos = self.snake[0].position  # snake head always at index 0
 
-        if y_pos == 0 or x_pos == (WIDTH - BODY_WIDTH) or y_pos == (HEIGHT - BODY_HEIGHT) or x_pos == 0:
+        if y_pos == 0 or x_pos >= (WIDTH - BODY_WIDTH) or y_pos >= (HEIGHT - BODY_HEIGHT) or x_pos == 0:
             return True
         
         return False
@@ -93,4 +118,5 @@ class Snake:
     def update(self):
         self.check_alive()
         self.move()
+        self._remove_turns()
         self._draw_snake()

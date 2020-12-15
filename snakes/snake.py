@@ -108,10 +108,26 @@ class Snake:
             return True
         
         return False
+    
+    def eaten_itself(self):
+        """Determines if the snake bites its tail."""
+        try:
+            x_head, y_head = self.snake[0].position
+            x_second, y_second = self.snake[1].position
+            x_last, y_last = self.snake[-1].position
+
+            x_min, x_max = min(x_second, x_last), max(x_second, x_last)
+            y_min, y_max = min(y_second, y_last), max(y_second, y_last)
+            if x_head in range(x_min, x_max) and y_head in range(y_min, y_max):
+                return True
+            
+            return False
+        except IndexError:
+            return False
 
     def check_alive(self):
         """If snake touches boundary it dies and stops moving."""
-        if self.touching_boundary():
+        if self.touching_boundary() or self.eaten_itself():
             self.alive = False
             self.speed = 0
 

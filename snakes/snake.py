@@ -60,8 +60,10 @@ class Snake:
         x_last, y_last = self.snake[-1].position
 
         if self.snake[-1].direction == RIGHT or self.snake[-1].direction == LEFT:
+            x_last -= 1 * self.snake[-1].direction[0]
             pos = (x_last - (self.snake[-1].direction[0] * BODY_WIDTH), y_last)
         else:
+            y_last -= 1 * self.snake[-1].direction[1]
             pos = (x_last, y_last - (self.snake[-1].direction[1] * BODY_HEIGHT))
         
         new_body = self.body(pos, self.snake[-1].direction)
@@ -111,18 +113,21 @@ class Snake:
     
     def eaten_itself(self):
         """Determines if the snake bites its tail."""
-        try:
-            x_head, y_head = self.snake[0].position
-            x_second, y_second = self.snake[1].position
-            x_last, y_last = self.snake[-1].position
-
-            x_min, x_max = min(x_second, x_last), max(x_second, x_last)
-            y_min, y_max = min(y_second, y_last), max(y_second, y_last)
-            if x_head in range(x_min, x_max) and y_head in range(y_min, y_max):
-                return True
-            
+        if len(self.snake) == 1:
             return False
-        except IndexError:
+        else:
+            x_head, y_head = self.snake[0].position
+            x_head_range = set(range(x_head, x_head + BODY_WIDTH + 1))
+            y_head_range = set(range(y_head, y_head + BODY_HEIGHT + 1))
+
+            for i in range(2, len(self.snake)):
+                x_body, y_body = self.snake[i].position
+                x_body_range = set(range(x_body, x_body + BODY_WIDTH + 1))
+                y_body_range = set(range(y_body, y_body + BODY_HEIGHT + 1))
+
+                if x_head_range & x_body_range and y_head_range & y_body_range:
+                    return True
+            
             return False
 
     def check_alive(self):
